@@ -10,5 +10,11 @@
         "config": {
             "label": "CamControlWidget"
         }
+    },
+    {
+        "widget_type": "ImageViewerWidget",
+        "config": {
+            "label": "ImageViewerWidget"
+        }
     }
 ]

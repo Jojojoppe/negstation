@@ -102,6 +102,8 @@ class LayoutManager:
         layout_manager = LayoutManager()
         layout_manager.discover_and_register_widgets()
 
+        layout_manager.texture_registry = dpg.add_texture_registry() 
+
         with dpg.viewport_menu_bar():
             with dpg.menu(label="File"):
                 dpg.add_menu_item(label="Save Layout", callback=layout_manager.save_layout)
