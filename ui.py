@@ -7,6 +7,7 @@ import inspect
 from collections import deque
 
 import global_state
+import raw_processor
 from widgets.base_widget import BaseWidget
 
 class DpgLogHandler(logging.Handler):
@@ -32,6 +33,9 @@ class LayoutManager:
         self.widget_classes = {}
         self.updating_widgets = []
         self.global_state = global_state.GlobalState()
+
+        self.texture_registry = dpg.add_texture_registry() 
+        self.raw_processor = raw_processor.RawProcessor(self.global_state)
 
     def discover_and_register_widgets(self, directory="widgets"):
         """Dynamically discovers and registers widgets from a given directory."""
@@ -101,8 +105,6 @@ class LayoutManager:
 
         layout_manager = LayoutManager()
         layout_manager.discover_and_register_widgets()
-
-        layout_manager.texture_registry = dpg.add_texture_registry() 
 
         with dpg.viewport_menu_bar():
             with dpg.menu(label="File"):

@@ -2,75 +2,78 @@
 import dearpygui.dearpygui as dpg
 from .base_widget import BaseWidget
 import logging
+import numpy as np
 
 class ImageViewerWidget(BaseWidget):
     """
-    Displays a zoomable image inside a plot. This definitive version implements
-    programmatic pan and zoom by handling mouse events manually and repeatedly
-    calling set_axis_limits, as this is the only reliable method to achieve
-    both an initial fit and subsequent user interaction.
+    Displays a zoomable image inside a plot. This definitive version uses a
+    "reuse and reconfigure" pattern, creating DPG items only once and updating
+    them on subsequent loads to ensure stability and avoid segmentation faults.
     """
     def __init__(self, widget_type: str, config: dict, layout_manager, global_state):
         super().__init__(widget_type, config, layout_manager, global_state)
         
-        # Subscribe to the event that will provide new images
-        self.global_state.subscribe("NEW_IMAGE_CAPTURED", self.on_new_image)
-        
-        # Register for updates to handle the dirty flag and panning
+        self.global_state.subscribe("PROCESSED_IMAGE_READY", self.on_new_image_data)
         layout_manager.updating_widgets.append("ImageViewerWidget")
 
-        # Initialize tags and state variables
-        self.texture_tag = None
-        self.image_draw_tag = None
-        self.last_image_size = (1, 1) # width, height
-        self.needs_fit = False # The "dirty flag" for deferred fitting
+        # --- Initialize state ---
+        # A flag to know if the DPG items have been created yet.
+        self.is_initialized = False
+        # Generate the tags once. They will be reused for the widget's lifetime.
+        self.texture_tag = dpg.generate_uuid()
+        self.image_draw_tag = dpg.generate_uuid()
+        
+        self.last_image_size = (1, 1)
+        self.needs_fit = False
 
     def create(self):
-        """Creates the DPG window, plot, and the necessary mouse handlers."""
+        """Creates the DPG window and plot container. Does NOT create textures or drawings."""
         if dpg.does_item_exist(self.window_tag): return
         
         with dpg.window(label="Image Viewer", tag=self.window_tag, on_close=self._on_window_close, width=800, height=600):
-            # The plot is our canvas. `equal_aspects` is critical for preventing distortion.
             with dpg.plot(label="Image Plot", no_menus=True, height=-1, width=-1, equal_aspects=True) as self.plot_tag:
                 self.xaxis_tag = dpg.add_plot_axis(dpg.mvXAxis, no_tick_labels=True, no_gridlines=True)
                 self.yaxis_tag = dpg.add_plot_axis(dpg.mvYAxis, no_tick_labels=True, no_gridlines=True)
 
-    def on_new_image(self, image_path: str):
-        """Loads image data, deletes/recreates the drawing, and flags for a refit."""
-        if not image_path: return
-        logging.info(f"ImageViewer received new image: {image_path}")
+            with dpg.item_handler_registry(tag=f"my_window_handler_{self.window_tag}") as handler:
+                dpg.add_item_resize_handler(callback=self.fit_image_to_plot, user_data=self)
+                dpg.bind_item_handler_registry(self.window_tag, handler)
+
+    def on_new_image_data(self, image_data: np.ndarray):
+        """Handles receiving a processed NumPy array, creating/updating items safely."""
+        logging.info("ImageViewer received new processed image data.")
         try:
-            width, height, channels, data = dpg.load_image(image_path)
+            height, width, channels = image_data.shape
             self.last_image_size = (width, height)
             
-            # Create or update the texture in the registry
-            if self.texture_tag is not None:
-                dpg.delete_item(self.texture_tag)
-                
-            self.texture_tag = dpg.generate_uuid()
-            dpg.add_static_texture(width, height, data, tag=self.texture_tag, parent=self.layout_manager.texture_registry)
+            # --- THE "REUSE AND RECONFIGURE" LOGIC ---
+            if not self.is_initialized:
+                # FIRST RUN: Create the texture and drawing items for the first time.
+                logging.info("First image load: creating new texture and drawing items.")
+                dpg.add_dynamic_texture(width, height, image_data, tag=self.texture_tag, parent=self.layout_manager.texture_registry)
+                dpg.draw_image(self.texture_tag, (0, height), (width, 0), tag=self.image_draw_tag, parent=self.plot_tag)
+                self.is_initialized = True
+            else:
+                # SUBSEQUENT RUNS: Update the existing items. NO DELETION.
+                logging.info("Subsequent image load: updating existing texture and drawing.")
+                dpg.set_value(self.texture_tag, image_data)
+                dpg.configure_item(self.image_draw_tag, pmin=(0, height), pmax=(width, 0))
 
-            if self.image_draw_tag and dpg.does_item_exist(self.image_draw_tag):
-                dpg.delete_item(self.image_draw_tag)
-            
-            self.image_draw_tag = dpg.draw_image(self.texture_tag, (0, height), (width, 0), parent=self.plot_tag)
-            
-            # Set the dirty flag to trigger a fit on the next frame
+            # Set the dirty flag to trigger a fit on the next frame in all cases.
             self.needs_fit = True
             
             dpg.configure_item(self.window_tag, show=True)
-            dpg.configure_item(self.plot_tag, label=image_path)
             dpg.focus_item(self.window_tag)
 
         except Exception as e:
-            logging.error(f"ImageViewer failed to process image '{image_path}': {e}", exc_info=True)
+            logging.error(f"ImageViewer failed to process image data: {e}", exc_info=True)
 
     def fit_image_to_plot(self):
         """Calculates and MANUALLY sets the plot's axis limits for the initial fit."""
+        # This function is correct and necessary.
         plot_width = dpg.get_item_width(self.window_tag)
         plot_height = dpg.get_item_height(self.window_tag)
         if plot_width <= 0 or plot_height <= 0: return
-
         img_width, img_height = self.last_image_size
         if img_width <= 0 or img_height <= 0: return
 
