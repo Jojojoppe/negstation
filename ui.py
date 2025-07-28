@@ -6,6 +6,7 @@ import importlib
 import inspect
 from collections import deque
 
+import global_state
 from widgets.base_widget import BaseWidget
 
 class DpgLogHandler(logging.Handler):
@@ -29,6 +30,8 @@ class LayoutManager:
     def __init__(self):
         self.active_widgets = {}
         self.widget_classes = {}
+        self.updating_widgets = []
+        self.global_state = global_state.GlobalState()
 
     def discover_and_register_widgets(self, directory="widgets"):
         """Dynamically discovers and registers widgets from a given directory."""
@@ -63,7 +66,7 @@ class LayoutManager:
             return
         config = {"label": widget_type}
         WidgetClass = self.widget_classes[widget_type]
-        widget_instance = WidgetClass(widget_type, config, self)
+        widget_instance = WidgetClass(widget_type, config, self, self.global_state)
         logging.info(f"Creating new widget of type: {widget_type}")
         self.active_widgets[widget_type] = widget_instance
         widget_instance.create()
@@ -87,6 +90,9 @@ class LayoutManager:
         if "LogWidget" in self.active_widgets:
             # We need to pass the handler to the update method
             self.active_widgets["LogWidget"].update_logs(log_handler)
+        for w in self.updating_widgets:
+            if w in self.active_widgets:
+                self.active_widgets[w].update()
 
     @staticmethod
     def run():
