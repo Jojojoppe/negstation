@@ -13,7 +13,8 @@ from .layout_manager import LayoutManager
 
 from .widgets.base_widget import BaseWidget
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -59,14 +60,16 @@ class EditorManager:
                         and issubclass(cls, ModuleBaseWidget)
                         and cls is not ModuleBaseWidget
                     ):
-                        logging.info(f"  -> Found and registered widget: {name}")
+                        logging.info(
+                            f"  -> Found and registered widget: {name}")
                         self._register_widget(name, cls)
             except Exception as e:
                 logging.error(f"Failed to import widget '{py_file.name}': {e}")
 
     def _register_widget(self, name: str, widget_class: object):
         if name in self.widget_classes:
-            logging.warning(f"Widget '{name}' is already registered. Overwriting.")
+            logging.warning(
+                f"Widget '{name}' is already registered. Overwriting.")
         self.widget_classes[name] = widget_class
 
     def _add_widget(self, widget_type: str):
@@ -81,7 +84,7 @@ class EditorManager:
         )
         self.layout_manager.load_layout()
 
-        dpg.create_viewport(title="NegStation", width=960, height=400)
+        dpg.create_viewport(title="NegStation", width=800, height=600)
         dpg.configure_app(docking=True, docking_space=True)
 
         with dpg.viewport_menu_bar():
