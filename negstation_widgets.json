@@ -1,26 +1,10 @@
 [
     {
-        "widget_type": "LogWidget",
-        "config": {
-            "label": "LogWidget"
-        }
+        "widget_type": "OpenImageWidget",
+        "config": {}
     },
     {
-        "widget_type": "CamControlWidget",
-        "config": {
-            "label": "CamControlWidget"
-        }
-    },
-    {
-        "widget_type": "ImageViewerWidget",
-        "config": {
-            "label": "ImageViewerWidget"
-        }
-    },
-    {
-        "widget_type": "RawSettingsWidget",
-        "config": {
-            "label": "RawSettingsWidget"
-        }
+        "widget_type": "StageViewerWidget",
+        "config": {}
     }
 ]

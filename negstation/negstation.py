@@ -1,0 +1,110 @@
+import dearpygui.dearpygui as dpg
+import logging
+import os
+import importlib
+import inspect
+import sys
+from pathlib import Path
+from importlib.machinery import SourceFileLoader
+
+from .event_bus import EventBus
+from .image_pipeline import ImagePipeline
+from .layout_manager import LayoutManager
+
+from .widgets.base_widget import BaseWidget
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
+
+
+class EditorManager:
+    def __init__(self):
+        dpg.create_context()
+        self.bus = EventBus(logger)
+        self.pipeline = ImagePipeline(self.bus)
+        self.layout_manager = LayoutManager(self, logger)
+        self.widgets = []
+        self.widget_classes = {}
+
+    def _discover_and_register_widgets(self, directory="widgets"):
+        logging.info(f"Discovering widgets in '{directory}' directory...")
+        dir_path = Path(directory)
+        if not dir_path.is_dir():
+            logging.error(f"Path '{directory}' is not a directory")
+            return
+
+        parent = str(dir_path.parent.resolve())
+        if parent not in sys.path:
+            sys.path.insert(0, parent)
+        pkg_name = dir_path.name  # e.g. 'widgets'
+
+        # 1) Load the package’s own BaseWidget
+        try:
+            base_mod = importlib.import_module(f"{pkg_name}.base_widget")
+            ModuleBaseWidget = getattr(base_mod, "BaseWidget")
+        except Exception:
+            ModuleBaseWidget = None
+
+        for py_file in dir_path.glob("*.py"):
+            if py_file.name.startswith("__"):
+                continue
+
+            module_name = f"{pkg_name}.{py_file.stem}"
+            try:
+                module = importlib.import_module(module_name)
+                for name, cls in inspect.getmembers(module, inspect.isclass):
+                    # 2) Use the BaseWidget defined *in* widgets/base_widget.py
+                    if (
+                        ModuleBaseWidget
+                        and issubclass(cls, ModuleBaseWidget)
+                        and cls is not ModuleBaseWidget
+                    ):
+                        logging.info(f"  -> Found and registered widget: {name}")
+                        self._register_widget(name, cls)
+            except Exception as e:
+                logging.error(f"Failed to import widget '{py_file.name}': {e}")
+
+    def _register_widget(self, name: str, widget_class: object):
+        if name in self.widget_classes:
+            logging.warning(f"Widget '{name}' is already registered. Overwriting.")
+        self.widget_classes[name] = widget_class
+
+    def _add_widget(self, widget_type: str):
+        WidgetClass = self.widget_classes[widget_type]
+        instance = WidgetClass(self, logger)
+        self.widgets.append(instance)
+        instance.create()
+
+    def setup(self):
+        self._discover_and_register_widgets(
+            f"{os.path.dirname(os.path.realpath(__file__))}/widgets"
+        )
+        self.layout_manager.load_layout()
+
+        dpg.create_viewport(title="NegStation", width=960, height=400)
+        dpg.configure_app(docking=True, docking_space=True)
+
+        with dpg.viewport_menu_bar():
+            with dpg.menu(label="File"):
+                dpg.add_menu_item(
+                    label="Save Layout", callback=self.layout_manager.save_layout
+                )
+
+            with dpg.menu(label="View"):
+                for widget_name in sorted(self.widget_classes.keys()):
+                    dpg.add_menu_item(
+                        label=self.widget_classes[widget_name].name,
+                        callback=lambda s, a, ud: self._add_widget(ud),
+                        user_data=widget_name,
+                    )
+
+    def run(self):
+        self.setup()
+        dpg.setup_dearpygui()
+        dpg.show_viewport()
+        while dpg.is_dearpygui_running():
+            self.bus.process_main_queue()
+            for w in self.widgets:
+                w.update()
+            dpg.render_dearpygui_frame()
+        dpg.destroy_context()

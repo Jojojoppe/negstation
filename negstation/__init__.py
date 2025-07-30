@@ -1,0 +1,1 @@
+from .negstation import EditorManager as NegStation
