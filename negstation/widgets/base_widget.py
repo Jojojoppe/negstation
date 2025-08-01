@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 class BaseWidget:
     name: str = "BaseWidget"
+    register: bool = False
 
     def __init__(self, manager: "EditorManager", logger: logging.Logger):
         self.manager = manager

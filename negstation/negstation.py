@@ -5,7 +5,6 @@ import importlib
 import inspect
 import sys
 from pathlib import Path
-from importlib.machinery import SourceFileLoader
 
 from .event_bus import EventBus
 from .image_pipeline import ImagePipeline
@@ -59,6 +58,7 @@ class EditorManager:
                         ModuleBaseWidget
                         and issubclass(cls, ModuleBaseWidget)
                         and cls is not ModuleBaseWidget
+                        and cls.register
                     ):
                         logging.info(
                             f"  -> Found and registered widget: {name}")

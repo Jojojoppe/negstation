@@ -6,5 +6,9 @@
     {
         "widget_type": "StageViewerWidget",
         "config": {}
+    },
+    {
+        "widget_type": "InvertStage",
+        "config": {}
     }
 ]

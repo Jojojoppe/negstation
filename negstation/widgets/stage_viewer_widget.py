@@ -6,6 +6,7 @@ from .base_widget import BaseWidget
 
 class StageViewerWidget(BaseWidget):
     name: str = "Image Stage Viewer"
+    register = True
 
     def __init__(self, manager, logger):
         super().__init__(manager, logger)

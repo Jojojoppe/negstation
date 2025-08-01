@@ -7,6 +7,7 @@ from .base_widget import BaseWidget
 
 class OpenImageWidget(BaseWidget):
     name: str = "Open Image"
+    register = True
 
     def __init__(self, manager, logger, stage_out="loaded_image"):
         super().__init__(manager, logger)
