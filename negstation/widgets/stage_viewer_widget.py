@@ -32,6 +32,7 @@ class PipelineStageViewer(PipelineStageWidget):
 
     def update_texture(self, img: np.ndarray):
         """Only call from update function"""
+        # TODO show a smaller version of the image to speed things up
         if img is None:
             dpg.configure_item(self.image_item, show=False)
             return

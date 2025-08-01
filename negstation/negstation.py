@@ -12,7 +12,7 @@ from .layout_manager import LayoutManager
 
 from .widgets.base_widget import BaseWidget
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,7 @@ class EditorManager:
     def _add_widget(self, widget_type: str):
         WidgetClass = self.widget_classes[widget_type]
         instance = WidgetClass(self, logger)
+        logger.info(f'Created instance: {str(instance)}')
         self.widgets.append(instance)
         instance.create()
 

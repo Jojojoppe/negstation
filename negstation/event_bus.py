@@ -1,6 +1,8 @@
 import threading
 import queue
 import logging
+import inspect
+import types
 
 
 class EventBus:
@@ -42,3 +44,14 @@ class EventBus:
                 callback(data)
             except queue.Empty:
                 break
+
+    def unsubscribe_instance(self, instance):
+        for event_type, subs in list(self.subscribers.items()):
+            new_subs = []
+            for callback, main_thread in subs:
+                # if it's a bound method to our instance, skip it
+                if inspect.ismethod(callback) and callback.__self__ is instance:
+                    continue
+                new_subs.append((callback, main_thread))
+            if len(new_subs) != len(subs):
+                self.subscribers[event_type] = new_subs

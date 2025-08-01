@@ -22,6 +22,7 @@ class PipelineStageWidget(BaseWidget):
         self.pipeline_stage_in_id = None
         self.pipeline_stage_out_id = None
         self.pipeline_config_group_tag = dpg.generate_uuid()
+        self.stage_in_combo = dpg.generate_uuid()
 
         if self.has_pipeline_out:
             self.pipeline_stage_out_id = self.manager.pipeline.register_stage(
@@ -38,11 +39,12 @@ class PipelineStageWidget(BaseWidget):
     def create_content(self):
         with dpg.group(tag=self.pipeline_config_group_tag):
             if self.has_pipeline_in:
-                self.stage_in_combo = dpg.add_combo(
+                dpg.add_combo(
                     label="Stage In",
                     items=[],
                     callback=self._on_stage_in_select,
                     default_value=f"{self.manager.pipeline.get_stage_name(0)} : 0",
+                    tag=self.stage_in_combo
                 )
             if self.has_pipeline_out:
                 dpg.add_input_text(
@@ -72,9 +74,14 @@ class PipelineStageWidget(BaseWidget):
 
     # Callbacks
 
+    def _on_window_close(self):
+        if self.has_pipeline_out:
+            self.manager.pipeline.remove_stage(self.pipeline_stage_out_id)
+        return super()._on_window_close()
+
     def _on_stage_list(self, stagelist):
         if self.has_pipeline_in:
-            stages = [f"{stage} : {id}" for id, stage in enumerate(stagelist)]
+            stages = [f"{stage} : {id}" for id, stage in stagelist.items()]
             dpg.configure_item(self.stage_in_combo, items=stages)
 
     def _on_stage_in_select(self, sender, selected_stage: str):

@@ -6,17 +6,19 @@ from .event_bus import EventBus
 class ImagePipeline:
     def __init__(self, bus: EventBus):
         self.bus = bus
-        self.stages = []
+        self.id_counter = 0
+        self.stages = {}
         self.stagedata = {}
 
     def register_stage(self, name: str):
-        self.stages.append(name)
-        self.stagedata[name] = None
+        self.stages[self.id_counter] = name
+        self.stagedata[self.id_counter] = None
         self.bus.publish_deferred("pipeline_stages", self.stages)
-        return len(self.stages) - 1
+        self.id_counter += 1
+        return self.id_counter-1
 
     def rename_stage(self, id: int, name: str):
-        if id >= 0 and id < len(self.stages):
+        if id in self.stages:
             self.stages[id] = name
             self.bus.publish_deferred("pipeline_stages", self.stages)
 
@@ -30,11 +32,16 @@ class ImagePipeline:
         else:
             return None
 
-    def get_stage_name(self, id:int):
+    def get_stage_name(self, id: int):
         if id >= 0 and id < len(self.stages):
-            return self.stages[id] 
+            return self.stages[id]
         else:
             return None
-        
+
     def republish_stages(self):
         self.bus.publish_deferred("pipeline_stages", self.stages)
+
+    def remove_stage(self, id: int):
+        del self.stages[id]
+        del self.stagedata[id]
+        self.republish_stages()

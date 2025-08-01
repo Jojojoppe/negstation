@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
 import logging
+import gc
 
 from typing import TYPE_CHECKING
 
@@ -40,9 +41,10 @@ class BaseWidget:
             dpg.add_item_resize_handler(
                 callback=self._on_window_resize, parent=self.window_handler
             )
-            dpg.bind_item_handler_registry(self.window_tag, self.window_handler)
 
             self.create_content()
+            
+            dpg.bind_item_handler_registry(self.window_tag, self.window_handler)
 
     def create_content(self):
         """Must be implemented by the widget, creates the content of the window"""
@@ -65,14 +67,24 @@ class BaseWidget:
     # Callbacks
 
     def _on_window_close(self):
-        try:
-            dpg.delete_item(self.window_tag)
-            self.manager.widgets.remove(self)
-        except ValueError:
-            pass
+        """Some cleanup after closing a window"""
+        self.manager.bus.unsubscribe_instance(self)
+
+        dpg.delete_item(self.window_tag)
+        dpg.delete_item(self.window_handler)
+
+        self.manager.widgets.remove(self)
+
+        self.manager = None
+        self.logger = None
+        
+        gc.collect()
 
     def _on_window_resize(self, data):
         win_w, win_h = dpg.get_item_rect_size(self.window_tag)
         self.window_height = win_h
         self.window_width = win_w
         self.on_resize(win_w, win_h)
+
+    def __del__(self):
+        print("Widget deleted")
