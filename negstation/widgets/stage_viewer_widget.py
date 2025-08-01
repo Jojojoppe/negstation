@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
-
+from PIL import Image
 from .pipeline_stage_widget import PipelineStageWidget
 
 
@@ -27,6 +27,18 @@ class PipelineStageViewer(PipelineStageWidget):
         self.needs_update = True
 
     def on_pipeline_data(self, img):
+        # Resize if needed
+        h, w, _ = img.shape
+        max_dim = 500
+        scale = min(1.0, max_dim / w, max_dim / h)
+        if scale < 1.0:
+            # convert to 0–255 uint8, resize with PIL, back to float32 [0–1]
+            pil = Image.fromarray((img * 255).astype(np.uint8), mode="RGBA")
+            new_w, new_h = int(w * scale), int(h * scale)
+            pil = pil.resize((new_w, new_h), Image.LANCZOS)
+            img = np.asarray(pil).astype(np.float32) / 255.0
+            w, h = new_w, new_h
+
         self.img = img
         self.needs_update = True
 
@@ -54,7 +66,7 @@ class PipelineStageViewer(PipelineStageWidget):
         avail_w = win_w
         avail_h = win_h
 
-        scale = min(avail_w / w, avail_h / h, 1.0)
+        scale = min(avail_w / w, avail_h / h) #, 1.0)
         disp_w = int(w * scale)
         disp_h = int(h * scale)
 
