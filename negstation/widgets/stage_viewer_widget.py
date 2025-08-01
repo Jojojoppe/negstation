@@ -19,6 +19,7 @@ class StageViewerWidget(BaseWidget):
         self.current = None
         self.texture_tag = dpg.generate_uuid()
         self.img = None
+        self.needs_update = False
 
         # Subscribe only to stage list updates
         self.manager.bus.subscribe(
@@ -44,7 +45,8 @@ class StageViewerWidget(BaseWidget):
 
     def on_resize(self, app_data):
         if self.img is not None:
-            self.update_texture(self.img)
+            self.needs_update = True
+            # self.update_texture(self.img)
 
     def on_stage_list(self, stages):
         # Update dropdown items
@@ -56,7 +58,8 @@ class StageViewerWidget(BaseWidget):
         if name == self.current:
             if img is not None:
                 self.img = img
-                self.update_texture(img)
+                self.needs_update = True
+                # self.update_texture(img)
 
     def on_select(self, sender, selected_stage):
         # User-picked stage: fetch and render
@@ -64,7 +67,8 @@ class StageViewerWidget(BaseWidget):
         img = self.manager.pipeline.get_stage(selected_stage)
         if img is not None:
             self.img = img
-            self.update_texture(img)
+            self.needs_update = True
+            # self.update_texture(img)
 
     def update_texture(self, img: np.ndarray):
         # img is a NumPy array with shape (h, w, 4)
@@ -105,3 +109,8 @@ class StageViewerWidget(BaseWidget):
             width=disp_w,
             height=disp_h
         )
+
+    def update(self):
+        if self.needs_update:
+            self.needs_update = False
+            self.update_texture(self.img)
