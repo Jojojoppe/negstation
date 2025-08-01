@@ -4,11 +4,11 @@
         "config": {}
     },
     {
-        "widget_type": "StageViewerWidget",
+        "widget_type": "InvertStage",
         "config": {}
     },
     {
-        "widget_type": "InvertStage",
+        "widget_type": "PipelineStageViewer",
         "config": {}
     }
 ]

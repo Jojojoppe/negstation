@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 class EditorManager:
     def __init__(self):
         dpg.create_context()
+        self.texture_registry = dpg.add_texture_registry()
         self.bus = EventBus(logger)
         self.pipeline = ImagePipeline(self.bus)
         self.layout_manager = LayoutManager(self, logger)
