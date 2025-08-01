@@ -4,6 +4,7 @@ import os
 import importlib
 import inspect
 import sys
+import signal
 from pathlib import Path
 
 from .event_bus import EventBus
@@ -94,6 +95,9 @@ class EditorManager:
                 dpg.add_menu_item(
                     label="Save Layout", callback=self.layout_manager.save_layout
                 )
+                dpg.add_menu_item(
+                    label="Quit", callback=lambda: dpg.stop_dearpygui()
+                )
 
             with dpg.menu(label="View"):
                 for widget_name in sorted(self.widget_classes.keys()):
@@ -107,9 +111,13 @@ class EditorManager:
         self.setup()
         dpg.setup_dearpygui()
         dpg.show_viewport()
-        while dpg.is_dearpygui_running():
-            self.bus.process_main_queue()
-            for w in self.widgets:
-                w.update()
-            dpg.render_dearpygui_frame()
+
+        try:
+            while dpg.is_dearpygui_running():
+                self.bus.process_main_queue()
+                for w in self.widgets:
+                    w.update()
+                dpg.render_dearpygui_frame()
+        except KeyboardInterrupt:
+            logger.info("CTRL-C pressed: exiting...")
         dpg.destroy_context()
