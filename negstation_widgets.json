@@ -18,5 +18,13 @@
     {
         "widget_type": "LogWindowWidget",
         "config": {}
+    },
+    {
+        "widget_type": "MonochromeStage",
+        "config": {}
+    },
+    {
+        "widget_type": "HistogramWidget",
+        "config": {}
     }
 ]

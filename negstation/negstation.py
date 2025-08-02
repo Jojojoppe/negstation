@@ -87,7 +87,7 @@ class EditorManager:
         )
         self.layout_manager.load_layout()
 
-        dpg.create_viewport(title="NegStation", width=800, height=600)
+        dpg.create_viewport(title="NegStation", width=1200, height=800)
         dpg.configure_app(docking=True, docking_space=True)
 
         with dpg.viewport_menu_bar():
