@@ -4,15 +4,19 @@
         "config": {}
     },
     {
-        "widget_type": "InvertStage",
-        "config": {}
-    },
-    {
         "widget_type": "PipelineStageViewer",
         "config": {}
     },
     {
+        "widget_type": "InvertStage",
+        "config": {}
+    },
+    {
         "widget_type": "OpenRawWidget",
+        "config": {}
+    },
+    {
+        "widget_type": "LogWindowWidget",
         "config": {}
     }
 ]

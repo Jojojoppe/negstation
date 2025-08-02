@@ -39,6 +39,9 @@ class OpenRawWidget(PipelineStageWidget):
             "four_color_rgb":     False,
         }
 
+    def get_config(self):
+        return {}
+
     def create_pipeline_stage_content(self):
         with dpg.file_dialog(
             directory_selector=False,
@@ -140,7 +143,7 @@ class OpenRawWidget(PipelineStageWidget):
                     "four_color_rgb", a)
             )
 
-        with dpg.group(tag=self.busy_group):
+        with dpg.group(tag=self.busy_group, show=False):
             dpg.add_text("Processing...")
 
     def _on_open_file(self):
