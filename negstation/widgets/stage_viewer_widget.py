@@ -28,6 +28,8 @@ class PipelineStageViewer(PipelineStageWidget):
 
     def on_pipeline_data(self, img):
         # Resize if needed
+        if img is None:
+            return
         h, w, _ = img.shape
         max_dim = 500
         scale = min(1.0, max_dim / w, max_dim / h)
@@ -66,7 +68,7 @@ class PipelineStageViewer(PipelineStageWidget):
         avail_w = win_w
         avail_h = win_h
 
-        scale = min(avail_w / w, avail_h / h) #, 1.0)
+        scale = min(avail_w / w, avail_h / h)  # , 1.0)
         disp_w = int(w * scale)
         disp_h = int(h * scale)
 

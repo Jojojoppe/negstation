@@ -25,6 +25,9 @@ class OpenImageWidget(PipelineStageWidget):
             height=300,
             width=400,
         ):
+            dpg.add_file_extension(
+                "Image files {.png,.jpg,.jpeg,.bmp .gif,.tif,.tiff}",
+            )
             dpg.add_file_extension(".*")
         dpg.add_button(label="Open File...", callback=self._on_open_file)
 
@@ -33,7 +36,8 @@ class OpenImageWidget(PipelineStageWidget):
 
     def _on_file_selected(self, sender, app_data):
         selection = (
-            f"{app_data['current_path']}/{list(app_data['selections'].keys())[0]}"
+            f"{app_data['current_path']
+               }/{list(app_data['selections'].keys())[0]}"
             if isinstance(app_data, dict)
             else None
         )
@@ -42,7 +46,8 @@ class OpenImageWidget(PipelineStageWidget):
         self.logger.info(f"Selected file '{selection}'")
         try:
             img = Image.open(selection).convert("RGBA")
-            arr = np.asarray(img).astype(np.float32) / 255.0  # normalize to [0,1]
+            arr = np.asarray(img).astype(np.float32) / \
+                255.0  # normalize to [0,1]
             # Publish into pipeline
             self.manager.pipeline.publish(self.pipeline_stage_out_id, arr)
         except Exception as e:

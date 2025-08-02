@@ -10,5 +10,9 @@
     {
         "widget_type": "PipelineStageViewer",
         "config": {}
+    },
+    {
+        "widget_type": "OpenRawWidget",
+        "config": {}
     }
 ]
