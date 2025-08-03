@@ -41,6 +41,9 @@ class HistogramWidget(PipelineStageWidget):
         self.img = img
         self.needs_redraw = True
 
+    def on_full_res_pipeline_data(self, img):
+        pass
+
     def update(self):
         # TODO move calculations to on_pipeline_data
         if not self.needs_redraw or self.img is None:
