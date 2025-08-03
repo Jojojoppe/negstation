@@ -64,7 +64,8 @@ class PipelineStageWidget(BaseWidget):
                     tag=self.stage_out_input,
                 )
             dpg.add_separator()
-        self.create_pipeline_stage_content()
+        with dpg.group():
+            self.create_pipeline_stage_content()
 
     def create_pipeline_stage_content(self):
         """Must be implemented by the widget, creates the content of the window"""
@@ -176,5 +177,4 @@ class PipelineStageWidget(BaseWidget):
         group_x, group_y = dpg.get_item_pos(self.pipeline_config_group_tag)
         self.window_height = win_h - group_h - group_y - 12
         self.window_width = win_w - 7
-        self.window_offset_y = group_h + group_y + 3
         self.on_resize(win_w, win_h)

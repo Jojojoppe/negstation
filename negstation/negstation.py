@@ -82,6 +82,16 @@ class EditorManager:
         instance.create()
         instance.set_config(config)
 
+    def _on_drag(self, sender, app_data, user_data):
+        self.bus.publish_deferred("mouse_dragged", {
+            "button": (
+                        "right"
+                        if app_data[0] == 0
+                        else ("left" if app_data[0] == 1 else ("middle"))
+                    ),
+            "delta": (app_data[1], app_data[2])
+        })
+
     def setup(self):
         self._discover_and_register_widgets(
             f"{os.path.dirname(os.path.realpath(__file__))}/widgets"
@@ -110,6 +120,11 @@ class EditorManager:
                         callback=lambda s, a, ud: self._add_widget(ud),
                         user_data=widget_name,
                     )
+                
+            with dpg.handler_registry() as self.handler_registry:
+                dpg.add_mouse_drag_handler(callback=self._on_drag, threshold=1.0, button=0)
+                dpg.add_mouse_drag_handler(callback=self._on_drag, threshold=1.0, button=1)
+                dpg.add_mouse_drag_handler(callback=self._on_drag, threshold=1.0, button=2)
 
     def run(self):
         self.setup()

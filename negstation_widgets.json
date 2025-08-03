@@ -3,7 +3,8 @@
         "0": "opened_image",
         "1": "inverted_image",
         "2": "opened_raw",
-        "3": "monochrome"
+        "3": "monochrome",
+        "4": "oriented_image"
     },
     "widgets": [
         {
@@ -19,7 +20,7 @@
             "widget_type": "PipelineStageViewer",
             "config": {
                 "pipeline_config": {
-                    "stage_in": 3,
+                    "stage_in": 4,
                     "stage_out": null
                 }
             }
@@ -28,7 +29,7 @@
             "widget_type": "InvertStage",
             "config": {
                 "pipeline_config": {
-                    "stage_in": 2,
+                    "stage_in": 3,
                     "stage_out": 1
                 }
             }
@@ -63,7 +64,7 @@
             "widget_type": "MonochromeStage",
             "config": {
                 "pipeline_config": {
-                    "stage_in": 1,
+                    "stage_in": 2,
                     "stage_out": 3
                 }
             }
@@ -72,7 +73,7 @@
             "widget_type": "HistogramWidget",
             "config": {
                 "pipeline_config": {
-                    "stage_in": 3,
+                    "stage_in": 4,
                     "stage_out": null
                 }
             }
@@ -81,8 +82,22 @@
             "widget_type": "ExportStage",
             "config": {
                 "pipeline_config": {
-                    "stage_in": 3,
+                    "stage_in": 4,
                     "stage_out": null
+                }
+            }
+        },
+        {
+            "widget_type": "OrientationStage",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": 1,
+                    "stage_out": 4
+                },
+                "orientation": {
+                    "rotation": 0,
+                    "mirror_h": "False",
+                    "mirror_v": "False"
                 }
             }
         }
