@@ -39,6 +39,19 @@
                 "pipeline_config": {
                     "stage_in": null,
                     "stage_out": 2
+                },
+                "raw_config": {
+                    "demosaic_algorithm": "DemosaicAlgorithm.AHD",
+                    "output_color": "ColorSpace.sRGB",
+                    "output_bps": "16",
+                    "use_camera_wb": "True",
+                    "use_auto_wb": "False",
+                    "user_wb": "(1.0, 1.0, 1.0, 1.0)",
+                    "bright": "1.0",
+                    "no_auto_bright": "False",
+                    "gamma": "1.0",
+                    "half_size": "False",
+                    "four_color_rgb": "False"
                 }
             }
         },
