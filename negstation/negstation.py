@@ -13,8 +13,7 @@ from .layout_manager import LayoutManager
 
 from .widgets.base_widget import BaseWidget
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -62,35 +61,39 @@ class EditorManager:
                         and cls is not ModuleBaseWidget
                         and cls.register
                     ):
-                        logging.info(
-                            f"  -> Found and registered widget: {name}")
+                        logging.info(f"  -> Found and registered widget: {name}")
                         self._register_widget(name, cls)
             except Exception as e:
                 logging.error(f"Failed to import widget '{py_file.name}': {e}")
 
     def _register_widget(self, name: str, widget_class: object):
         if name in self.widget_classes:
-            logging.warning(
-                f"Widget '{name}' is already registered. Overwriting.")
+            logging.warning(f"Widget '{name}' is already registered. Overwriting.")
         self.widget_classes[name] = widget_class
 
-    def _add_widget(self, widget_type: str, config:dict = {}):
+    def _add_widget(self, widget_type: str, config: dict = {}):
         WidgetClass = self.widget_classes[widget_type]
         instance = WidgetClass(self, logger)
-        logger.info(f'Created instance: {str(instance)}')
+        logger.info(f"Created instance: {str(instance)}")
         self.widgets.append(instance)
         instance.create()
         instance.set_config(config)
 
     def _on_drag(self, sender, app_data, user_data):
-        self.bus.publish_deferred("mouse_dragged", {
-            "button": (
-                        "right"
-                        if app_data[0] == 0
-                        else ("left" if app_data[0] == 1 else ("middle"))
-                    ),
-            "delta": (app_data[1], app_data[2])
-        })
+        self.bus.publish_deferred(
+            "mouse_dragged",
+            {
+                "button": (
+                    "right"
+                    if app_data[0] == 0
+                    else ("left" if app_data[0] == 1 else ("middle"))
+                ),
+                "delta": (app_data[1], app_data[2]),
+            },
+        )
+
+    def _on_scroll(self, sender, app_data, user_data):
+        self.bus.publish_deferred("mouse_scrolled", app_data)
 
     def setup(self):
         self._discover_and_register_widgets(
@@ -107,11 +110,12 @@ class EditorManager:
                     label="Save Layout", callback=self.layout_manager.save_layout
                 )
                 dpg.add_menu_item(
-                    label="Run full-res pipeline", callback=lambda: self.bus.publish_deferred("process_full_res", None)
+                    label="Run full-res pipeline",
+                    callback=lambda: self.bus.publish_deferred(
+                        "process_full_res", None
+                    ),
                 )
-                dpg.add_menu_item(
-                    label="Quit", callback=lambda: dpg.stop_dearpygui()
-                )
+                dpg.add_menu_item(label="Quit", callback=lambda: dpg.stop_dearpygui())
 
             with dpg.menu(label="View"):
                 for widget_name in sorted(self.widget_classes.keys()):
@@ -120,11 +124,18 @@ class EditorManager:
                         callback=lambda s, a, ud: self._add_widget(ud),
                         user_data=widget_name,
                     )
-                
+
             with dpg.handler_registry() as self.handler_registry:
-                dpg.add_mouse_drag_handler(callback=self._on_drag, threshold=1.0, button=0)
-                dpg.add_mouse_drag_handler(callback=self._on_drag, threshold=1.0, button=1)
-                dpg.add_mouse_drag_handler(callback=self._on_drag, threshold=1.0, button=2)
+                dpg.add_mouse_drag_handler(
+                    callback=self._on_drag, threshold=1.0, button=0
+                )
+                dpg.add_mouse_drag_handler(
+                    callback=self._on_drag, threshold=1.0, button=1
+                )
+                dpg.add_mouse_drag_handler(
+                    callback=self._on_drag, threshold=1.0, button=2
+                )
+                dpg.add_mouse_wheel_handler(callback=self._on_scroll)
 
     def run(self):
         self.setup()

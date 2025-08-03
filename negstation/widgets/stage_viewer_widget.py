@@ -21,6 +21,7 @@ class PipelineStageViewer(PipelineStageWidget):
         self.image_position = (0, 0)
 
         self.manager.bus.subscribe("mouse_dragged", self._on_mouse_drag, False)
+        self.manager.bus.subscribe("mouse_scrolled", self._on_mouse_scroll, False)
 
     def create_pipeline_stage_content(self):
         # Create an empty dynamic texture
@@ -93,6 +94,33 @@ class PipelineStageViewer(PipelineStageWidget):
                     "pos": (x, y),
                     "button": data['button'],
                     "delta": data['delta']
+                },
+            )
+
+    def _on_mouse_scroll(self, data):
+        mouse_x, mouse_y = dpg.get_mouse_pos(local=False)
+        canvas_x, canvas_y = dpg.get_item_rect_min(self.drawlist)
+        local_x = mouse_x - canvas_x
+        local_y = mouse_y - canvas_y
+
+        img_x, img_y = self.image_position
+        img_w, img_h = self.scaled_size
+
+        if (
+            local_x >= img_x
+            and local_x < img_x + img_w
+            and local_y >= img_y
+            and local_y < img_y + img_h
+        ):
+            # calculate the image coordinate
+            x = int((local_x - img_x) * self.img.shape[1] / img_w)
+            y = int((local_y - img_y) * self.img.shape[0] / img_h)
+            self.manager.bus.publish_deferred(
+                "img_scrolled",
+                {
+                    "stage_id": self.pipeline_stage_in_id,
+                    "pos": (x, y),
+                    "delta": data
                 },
             )
 
