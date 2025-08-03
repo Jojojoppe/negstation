@@ -66,6 +66,7 @@ class PipelineStageViewer(PipelineStageWidget):
                         if app_data[0] == 0
                         else ("left" if app_data[0] == 1 else ("middle"))
                     ),
+                    "obj":self,
                 },
             )
 
@@ -93,7 +94,8 @@ class PipelineStageViewer(PipelineStageWidget):
                     "stage_id": self.pipeline_stage_in_id,
                     "pos": (x, y),
                     "button": data['button'],
-                    "delta": data['delta']
+                    "delta": data['delta'],
+                    "obj":self,
                 },
             )
 
@@ -120,7 +122,8 @@ class PipelineStageViewer(PipelineStageWidget):
                 {
                     "stage_id": self.pipeline_stage_in_id,
                     "pos": (x, y),
-                    "delta": data
+                    "delta": data,
+                    "obj":self,
                 },
             )
 
