@@ -96,6 +96,9 @@ class EditorManager:
                     label="Save Layout", callback=self.layout_manager.save_layout
                 )
                 dpg.add_menu_item(
+                    label="Run full-res pipeline", callback=lambda: self.bus.publish_deferred("process_full_res", None)
+                )
+                dpg.add_menu_item(
                     label="Quit", callback=lambda: dpg.stop_dearpygui()
                 )
 

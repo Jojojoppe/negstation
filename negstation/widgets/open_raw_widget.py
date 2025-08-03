@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 import rawpy
 import numpy as np
+from PIL import Image
 
 from .pipeline_stage_widget import PipelineStageWidget
 
@@ -18,6 +19,8 @@ class OpenRawWidget(PipelineStageWidget):
         self.config_group = dpg.generate_uuid()
         self.busy_group = dpg.generate_uuid()
         self.raw_path = None
+        self.img = None
+        self.img_full = None
         self.config = {
             # Demosaic algorithm
             "demosaic_algorithm": rawpy.DemosaicAlgorithm.AHD,
@@ -38,6 +41,9 @@ class OpenRawWidget(PipelineStageWidget):
             "half_size":          False,
             "four_color_rgb":     False,
         }
+
+        self.manager.bus.subscribe(
+            "process_full_res", self._on_process_full_res, True)
 
     def get_config(self):
         return {}
@@ -203,6 +209,26 @@ class OpenRawWidget(PipelineStageWidget):
 
         rgba = np.concatenate([rgb_float, alpha], axis=2)
 
-        self.manager.pipeline.publish(self.pipeline_stage_out_id, rgba)
+        # scale for small version
+        max_dim = 500
+        scale = min(1.0, max_dim / w, max_dim / h)
+        if scale < 1.0:
+            # convert to 0–255 uint8, resize with PIL, back to float32 [0–1]
+            pil = Image.fromarray((rgba * 255).astype(np.uint8), mode="RGBA")
+            new_w, new_h = int(w * scale), int(h * scale)
+            pil = pil.resize((new_w, new_h), Image.LANCZOS)
+            rgba_small = np.asarray(pil).astype(np.float32) / 255.0
+            w_small, h_small = new_w, new_h
+
+        self.img_full = rgba
+        self.img = rgba_small
+
+        self.manager.pipeline.publish(self.pipeline_stage_out_id, rgba_small)
         dpg.configure_item(self.config_group, show=True)
         dpg.configure_item(self.busy_group, show=False)
+
+    def _on_process_full_res(self, data):
+        if self.img_full is None:
+            return
+        self.manager.pipeline.publish(
+            self.pipeline_stage_out_id, self.img_full, True)

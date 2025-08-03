@@ -23,16 +23,21 @@ class PipelineStageWidget(BaseWidget):
         self.pipeline_stage_out_id = None
         self.pipeline_config_group_tag = dpg.generate_uuid()
         self.stage_in_combo = dpg.generate_uuid()
+        self._last_full = False
 
         if self.has_pipeline_out:
             self.pipeline_stage_out_id = self.manager.pipeline.register_stage(
                 default_stage_out
             )
 
-        self.manager.bus.subscribe("pipeline_stages", self._on_stage_list, True)
+        self.manager.bus.subscribe(
+            "pipeline_stages", self._on_stage_list, True)
         if self.has_pipeline_in:
             self.pipeline_stage_in_id = 0
-            self.manager.bus.subscribe("pipeline_stage", self._on_stage_data, True)
+            self.manager.bus.subscribe(
+                "pipeline_stage", self._on_stage_data, True)
+            self.manager.bus.subscribe(
+                "pipeline_stage_full", self._on_stage_data_full, True)
         # force getting all available pipeline stages
         self.manager.pipeline.republish_stages()
 
@@ -43,7 +48,8 @@ class PipelineStageWidget(BaseWidget):
                     label="Stage In",
                     items=[],
                     callback=self._on_stage_in_select,
-                    default_value=f"{self.manager.pipeline.get_stage_name(0)} : 0",
+                    default_value=f"{
+                        self.manager.pipeline.get_stage_name(0)} : 0",
                     tag=self.stage_in_combo
                 )
             if self.has_pipeline_out:
@@ -59,11 +65,6 @@ class PipelineStageWidget(BaseWidget):
             dpg.add_separator()
         self.create_pipeline_stage_content()
 
-    def publish_stage(self, img: np.ndarray):
-        """Publishes an image to output stage"""
-        if self.has_pipeline_out:
-            self.manager.pipeline.publish(self.pipeline_stage_out_id, img)
-
     def create_pipeline_stage_content(self):
         """Must be implemented by the widget, creates the content of the window"""
         raise NotImplementedError
@@ -71,6 +72,12 @@ class PipelineStageWidget(BaseWidget):
     def on_pipeline_data(self, img: np.ndarray):
         """Must be implemented by the widget, is called when there is a new image published on the in stage"""
         pass
+
+    def publish_stage(self, img):
+        """Publishes an image to output stage"""
+        if self.has_pipeline_out:
+            self.manager.pipeline.publish(
+                self.pipeline_stage_out_id, img, full_res=self._last_full)
 
     # Callbacks
 
@@ -97,12 +104,25 @@ class PipelineStageWidget(BaseWidget):
         pipeline_id = data[0]
         img = data[1]
         if self.has_pipeline_in and pipeline_id == self.pipeline_stage_in_id:
+            self._last_full = False
             self.on_pipeline_data(img)
 
+    def _on_stage_data_full(self, data):
+        pipeline_id = data[0]
+        img = data[1]
+        if self.has_pipeline_in and pipeline_id == self.pipeline_stage_in_id:
+            self._last_full = True
+            if hasattr(self, "on_full_res_pipeline_data"):
+                self.on_full_res_pipeline_data(img)
+            else:
+                self.on_pipeline_data(img)
+
     # Override the window resize callback
+
     def _on_window_resize(self, data):
         win_w, win_h = dpg.get_item_rect_size(self.window_tag)
-        group_w, group_h = dpg.get_item_rect_size(self.pipeline_config_group_tag)
+        group_w, group_h = dpg.get_item_rect_size(
+            self.pipeline_config_group_tag)
         group_x, group_y = dpg.get_item_pos(self.pipeline_config_group_tag)
         self.window_height = win_h - group_h - group_y - 12
         self.window_width = win_w - 7

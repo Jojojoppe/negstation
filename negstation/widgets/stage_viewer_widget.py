@@ -31,18 +31,12 @@ class PipelineStageViewer(PipelineStageWidget):
         if img is None:
             return
         h, w, _ = img.shape
-        max_dim = 500
-        scale = min(1.0, max_dim / w, max_dim / h)
-        if scale < 1.0:
-            # convert to 0–255 uint8, resize with PIL, back to float32 [0–1]
-            pil = Image.fromarray((img * 255).astype(np.uint8), mode="RGBA")
-            new_w, new_h = int(w * scale), int(h * scale)
-            pil = pil.resize((new_w, new_h), Image.LANCZOS)
-            img = np.asarray(pil).astype(np.float32) / 255.0
-            w, h = new_w, new_h
 
         self.img = img
         self.needs_update = True
+
+    def on_full_res_pipeline_data(self, img):
+        pass
 
     def update_texture(self, img: np.ndarray):
         """Only call from update function"""

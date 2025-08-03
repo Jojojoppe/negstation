@@ -26,5 +26,9 @@
     {
         "widget_type": "HistogramWidget",
         "config": {}
+    },
+    {
+        "widget_type": "ExportStage",
+        "config": {}
     }
 ]
