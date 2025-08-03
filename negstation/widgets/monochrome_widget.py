@@ -14,7 +14,7 @@ class MonochromeStage(PipelineStageWidget):
         super().__init__(manager, logger, default_stage_out="monochrome")
 
     def create_pipeline_stage_content(self):
-        dpg.add_text("Converting to grayscale...")
+        pass
 
     def on_pipeline_data(self, img):
         if img is None:

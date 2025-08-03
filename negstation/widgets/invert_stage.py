@@ -14,7 +14,7 @@ class InvertStage(PipelineStageWidget):
         super().__init__(manager, logger, default_stage_out="inverted_image")
     
     def create_pipeline_stage_content(self):
-        dpg.add_text("Inversion is happening here")
+        pass
 
     def on_pipeline_data(self, img):
         if img is None:

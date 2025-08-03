@@ -22,6 +22,8 @@ class LogWindowWidget(BaseWidget):
         self.initialized = False
         self.log_tag = dpg.generate_uuid()
         self.log_lines = []
+        self.update_counter = 0
+        self.need_update = False
 
         # Create and attach handler
         self.handler = DPGLogHandler(self._on_log)
@@ -40,7 +42,7 @@ class LogWindowWidget(BaseWidget):
         self.log_lines.append(msg)
         if self.initialized:
             dpg.add_text(msg, parent=self.log_tag)
-            dpg.set_y_scroll(self.log_tag, dpg.get_y_scroll_max(self.log_tag))
+            self.need_update = True
 
     def on_resize(self, width: int, height: int):
         # Optional: could resize child window here if needed
@@ -51,3 +53,11 @@ class LogWindowWidget(BaseWidget):
             self.logger.removeHandler(self.handler)
             self.handler = None
         super()._on_window_close()
+
+    def update(self):
+        if self.need_update:
+            self.update_counter += 1
+            if self.update_counter == 10:
+                dpg.set_y_scroll(self.log_tag, dpg.get_y_scroll_max(self.log_tag))
+                self.update_counter = 0
+                self.need_update = False
