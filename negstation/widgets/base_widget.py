@@ -63,6 +63,10 @@ class BaseWidget:
     def get_config(self):
         """Caled by negstation itself, returns the saved widget config"""
         return self.config
+    
+    def set_config(self, config):
+        """Called by negstation itself but can be overridden by a widget"""
+        self.config = config
 
     # Callbacks
 

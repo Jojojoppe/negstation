@@ -23,6 +23,7 @@ class PipelineStageWidget(BaseWidget):
         self.pipeline_stage_out_id = None
         self.pipeline_config_group_tag = dpg.generate_uuid()
         self.stage_in_combo = dpg.generate_uuid()
+        self.stage_out_input = dpg.generate_uuid()
         self._last_full = False
 
         if self.has_pipeline_out:
@@ -30,14 +31,13 @@ class PipelineStageWidget(BaseWidget):
                 default_stage_out
             )
 
-        self.manager.bus.subscribe(
-            "pipeline_stages", self._on_stage_list, True)
+        self.manager.bus.subscribe("pipeline_stages", self._on_stage_list, True)
         if self.has_pipeline_in:
             self.pipeline_stage_in_id = 0
+            self.manager.bus.subscribe("pipeline_stage", self._on_stage_data, True)
             self.manager.bus.subscribe(
-                "pipeline_stage", self._on_stage_data, True)
-            self.manager.bus.subscribe(
-                "pipeline_stage_full", self._on_stage_data_full, True)
+                "pipeline_stage_full", self._on_stage_data_full, True
+            )
         # force getting all available pipeline stages
         self.manager.pipeline.republish_stages()
 
@@ -50,7 +50,7 @@ class PipelineStageWidget(BaseWidget):
                     callback=self._on_stage_in_select,
                     default_value=f"{
                         self.manager.pipeline.get_stage_name(0)} : 0",
-                    tag=self.stage_in_combo
+                    tag=self.stage_in_combo,
                 )
             if self.has_pipeline_out:
                 dpg.add_input_text(
@@ -61,6 +61,7 @@ class PipelineStageWidget(BaseWidget):
                     callback=lambda s, a, u: self.manager.pipeline.rename_stage(
                         self.pipeline_stage_out_id, a
                     ),
+                    tag=self.stage_out_input,
                 )
             dpg.add_separator()
         self.create_pipeline_stage_content()
@@ -77,7 +78,58 @@ class PipelineStageWidget(BaseWidget):
         """Publishes an image to output stage"""
         if self.has_pipeline_out:
             self.manager.pipeline.publish(
-                self.pipeline_stage_out_id, img, full_res=self._last_full)
+                self.pipeline_stage_out_id, img, full_res=self._last_full
+            )
+
+    def get_config(self):
+        return {
+            "pipeline_config": {
+                "stage_in": self.pipeline_stage_in_id,
+                "stage_out": self.pipeline_stage_out_id,
+            }
+        }
+
+    def set_config(self, config):
+        # Set pipelinedata
+        if "pipeline_config" in config:
+            if self.has_pipeline_in:
+                self.pipeline_stage_in_id = config["pipeline_config"]["stage_in"]
+            if self.has_pipeline_out:
+                self.pipeline_stage_out_id = config["pipeline_config"]["stage_out"]
+        self._update_ui_from_state()
+
+    def _update_ui_from_state(self):
+        """
+        Refresh the ‘Stage In’ combo (and ‘Stage Out’ input) so
+        that:
+          1. its items list matches the current pipeline stages, and
+          2. its displayed value matches the saved ID.
+        """
+        # --- Build the ordered list of "name : id" labels ---
+        ordered = sorted(self.manager.pipeline.stages.items(), key=lambda kv: kv[0])
+        labels = [f"{name} : {sid}" for sid, name in ordered]
+
+        # --- Update Stage In combo ---
+        if self.has_pipeline_in:
+            dpg.configure_item(self.stage_in_combo, items=labels)
+            # set the combo's value if the saved ID still exists
+            sid = self.pipeline_stage_in_id
+            if sid in self.manager.pipeline.stages:
+                name = self.manager.pipeline.get_stage_name(sid)
+                dpg.set_value(self.stage_in_combo, f"{name} : {sid}")
+            else:
+                # clear if it no longer exists
+                dpg.set_value(self.stage_in_combo, "")
+
+        # --- Update Stage Out input text ---
+        if self.has_pipeline_out:
+            # show the stage name (without ID) or blank if missing
+            sid = self.pipeline_stage_out_id
+            if sid in self.manager.pipeline.stages:
+                name = self.manager.pipeline.get_stage_name(sid)
+                dpg.set_value(self.stage_out_input, name)
+            else:
+                dpg.set_value(self.stage_out_input, "")
 
     # Callbacks
 
@@ -88,8 +140,7 @@ class PipelineStageWidget(BaseWidget):
 
     def _on_stage_list(self, stagelist):
         if self.has_pipeline_in:
-            stages = [f"{stage} : {id}" for id, stage in stagelist.items()]
-            dpg.configure_item(self.stage_in_combo, items=stages)
+            self._update_ui_from_state()
 
     def _on_stage_in_select(self, sender, selected_stage: str):
         d = selected_stage.split(" : ")
@@ -121,8 +172,7 @@ class PipelineStageWidget(BaseWidget):
 
     def _on_window_resize(self, data):
         win_w, win_h = dpg.get_item_rect_size(self.window_tag)
-        group_w, group_h = dpg.get_item_rect_size(
-            self.pipeline_config_group_tag)
+        group_w, group_h = dpg.get_item_rect_size(self.pipeline_config_group_tag)
         group_x, group_y = dpg.get_item_pos(self.pipeline_config_group_tag)
         self.window_height = win_h - group_h - group_y - 12
         self.window_width = win_w - 7

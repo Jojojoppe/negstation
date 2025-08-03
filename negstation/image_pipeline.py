@@ -11,6 +11,16 @@ class ImagePipeline:
         self.stagedata = {}
         self.stagedata_full = {}
 
+    def load_stages(self, stages:dict):
+        self.stages = stages
+        self.stagedata.clear()
+        self.stagedata_full.clear()
+        self.id_counter = len(stages)
+        for id, stage in self.stages.items():
+            print(id, stage)
+            self.stagedata[id] = None
+            self.stagedata_full[id] = None
+
     def register_stage(self, name: str):
         self.stages[self.id_counter] = name
         self.stagedata[self.id_counter] = None
@@ -37,13 +47,19 @@ class ImagePipeline:
                 "pipeline_stage", (id, self.stagedata[id]))
 
     def get_stage_data(self, id: int):
-        if id >= 0 and id < len(self.stages):
+        if id in self.stagedata:
             return self.stagedata[id]
+        else:
+            return None
+        
+    def get_stage_data_full(self, id: int):
+        if id in self.stagedata_full:
+            return self.stagedata_full[id]
         else:
             return None
 
     def get_stage_name(self, id: int):
-        if id >= 0 and id < len(self.stages):
+        if id in self.stages:
             return self.stages[id]
         else:
             return None

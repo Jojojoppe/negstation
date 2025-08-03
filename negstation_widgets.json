@@ -1,34 +1,77 @@
-[
-    {
-        "widget_type": "OpenImageWidget",
-        "config": {}
+{
+    "pipeline_order": {
+        "0": "opened_image",
+        "1": "inverted_image",
+        "2": "opened_raw",
+        "3": "monochrome"
     },
-    {
-        "widget_type": "PipelineStageViewer",
-        "config": {}
-    },
-    {
-        "widget_type": "InvertStage",
-        "config": {}
-    },
-    {
-        "widget_type": "OpenRawWidget",
-        "config": {}
-    },
-    {
-        "widget_type": "LogWindowWidget",
-        "config": {}
-    },
-    {
-        "widget_type": "MonochromeStage",
-        "config": {}
-    },
-    {
-        "widget_type": "HistogramWidget",
-        "config": {}
-    },
-    {
-        "widget_type": "ExportStage",
-        "config": {}
-    }
-]
+    "widgets": [
+        {
+            "widget_type": "OpenImageWidget",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": null,
+                    "stage_out": 0
+                }
+            }
+        },
+        {
+            "widget_type": "PipelineStageViewer",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": 3,
+                    "stage_out": null
+                }
+            }
+        },
+        {
+            "widget_type": "InvertStage",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": 2,
+                    "stage_out": 1
+                }
+            }
+        },
+        {
+            "widget_type": "OpenRawWidget",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": null,
+                    "stage_out": 2
+                }
+            }
+        },
+        {
+            "widget_type": "LogWindowWidget",
+            "config": {}
+        },
+        {
+            "widget_type": "MonochromeStage",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": 1,
+                    "stage_out": 3
+                }
+            }
+        },
+        {
+            "widget_type": "HistogramWidget",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": 3,
+                    "stage_out": null
+                }
+            }
+        },
+        {
+            "widget_type": "ExportStage",
+            "config": {
+                "pipeline_config": {
+                    "stage_in": 3,
+                    "stage_out": null
+                }
+            }
+        }
+    ]
+}

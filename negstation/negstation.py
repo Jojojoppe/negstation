@@ -74,12 +74,13 @@ class EditorManager:
                 f"Widget '{name}' is already registered. Overwriting.")
         self.widget_classes[name] = widget_class
 
-    def _add_widget(self, widget_type: str):
+    def _add_widget(self, widget_type: str, config:dict = {}):
         WidgetClass = self.widget_classes[widget_type]
         instance = WidgetClass(self, logger)
         logger.info(f'Created instance: {str(instance)}')
         self.widgets.append(instance)
         instance.create()
+        instance.set_config(config)
 
     def setup(self):
         self._discover_and_register_widgets(
