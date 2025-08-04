@@ -13,7 +13,8 @@ from .layout_manager import LayoutManager
 
 from .widgets.base_widget import BaseWidget
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -61,14 +62,16 @@ class EditorManager:
                         and cls is not ModuleBaseWidget
                         and cls.register
                     ):
-                        logging.info(f"  -> Found and registered widget: {name}")
+                        logging.info(
+                            f"  -> Found and registered widget: {name}")
                         self._register_widget(name, cls)
             except Exception as e:
                 logging.error(f"Failed to import widget '{py_file.name}': {e}")
 
     def _register_widget(self, name: str, widget_class: object):
         if name in self.widget_classes:
-            logging.warning(f"Widget '{name}' is already registered. Overwriting.")
+            logging.warning(
+                f"Widget '{name}' is already registered. Overwriting.")
         self.widget_classes[name] = widget_class
 
     def _add_widget(self, widget_type: str, config: dict = {}):
@@ -115,7 +118,8 @@ class EditorManager:
                         "process_full_res", None
                     ),
                 )
-                dpg.add_menu_item(label="Quit", callback=lambda: dpg.stop_dearpygui())
+                dpg.add_menu_item(
+                    label="Quit", callback=lambda: dpg.stop_dearpygui())
 
             with dpg.menu(label="View"):
                 for widget_name in sorted(self.widget_classes.keys()):
